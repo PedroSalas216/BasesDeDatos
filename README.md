@@ -1,5 +1,14 @@
 # BasesDeDatos
+
 USE mysql_u60;
+
+CREATE TABLE continent (
+    Name VARCHAR(80),
+    Area INT,
+    TotalMassPercent FLOAT,
+    MostPopulatedCity VARCHAR(255),
+    PRIMARY KEY (Name)
+);
 
 CREATE TABLE country (
     Code CHAR(3),
@@ -38,4 +47,19 @@ CREATE TABLE countrylanguage(
 );
 
 
-ALTER TABLE city ADD CONSTRAINT countrycode FOREIGN KEY (CountryCode) REFERENCES country(Code);
+INSERT INTO continent VALUES ('Africa', 30370000, 20.4, 'Cairo');
+INSERT INTO continent VALUES ('Antartica', 14000000, 9.2, 'McMurdo Station');
+INSERT INTO continent VALUES ('Asia', 44579000, 29.5, 'Mumbai');
+INSERT INTO continent VALUES ('Europe', 10180000, 6.8, 'Istanbul');
+INSERT INTO continent VALUES ('North America', 24709000, 16.5, 'Ciudad de México');
+INSERT INTO continent VALUES ('Oceania', 8600000, 5.9, 'Sydney');
+INSERT INTO continent VALUES ('South America', 17840000, 12.0, 'São Paulo');
+
+ALTER TABLE city ADD CONSTRAINT city_f_key FOREIGN KEY (CountryCode) REFERENCES country(Code);
+ALTER TABLE countrylanguage 
+    ADD CONSTRAINT countrylan_f_key FOREIGN KEY (CountryCode) REFERENCES country(Code);
+
+
+--------------------------------------PARTE 1
+
+ALTER TABLE country ADD CONSTRAINT continent_f_key FOREIGN KEY (Continent) REFERENCES continent(Name);
