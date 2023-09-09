@@ -62,7 +62,7 @@ WHERE
 SELECT
 	co.Name,
 	c_not_offitial.`Language`,
-	COUNT(*) over()
+	count(*) over()
 FROM
 	country co
 INNER JOIN countrylanguage c_not_offitial ON
@@ -84,7 +84,33 @@ WHERE
 
 -- Listar (sin duplicados) aquellas regiones que tengan países con una superficie menor a 1000 km2 y exista (en el país) al menos una ciudad con más de 100000 habitantes. (Hint: Esto puede resolverse con o sin una subquery, intenten encontrar ambas respuestas).
 
+SELECT
+	DISTINCT 
+	co.region 
+FROM 
+	country co
+WHERE 
+	co.SurfaceArea < 1000
+	AND 100000 < SOME (
+	SELECT
+		ci.Population
+	FROM
+		city ci
+	WHERE
+		ci.CountryCode = co.Code
+	);
+
 SELECT 
+	co.region
+FROM 
+	country co
+INNER JOIN
+	city ci ON 
+	ci.CountryCode = co.Code AND 
+	ci.Population > 100000 AND 
+	co.SurfaceArea < 1000
+
 	
+-- Listar el nombre de cada país con la cantidad de habitantes de su ciudad más poblada. (Hint: Hay dos maneras de llegar al mismo resultado. Usando consultas escalares o usando agrupaciones, encontrar ambas).
 
 
