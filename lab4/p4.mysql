@@ -1,116 +1,117 @@
 USE world;
 -- Parte 1
 -- 1 Listar el nombre de la ciudad y el nombre del país de todas las ciudades que pertenezcan a países con una población menor a 10000 habitantes.
-SELECT
-	ci.Name AS nombre_ciudad,
-	country.Name AS nombre_pais
-FROM
-	city ci
+SELECT ci.Name AS nombre_ciudad, country.Name AS nombre_pais
+FROM city ci
 INNER JOIN country ON
 	ci.CountryCode = country.Code
-WHERE
-	(
-	SELECT
-		SUM(ci2.Population)
-	FROM
-		city ci2
-	WHERE
-		ci2.CountryCode = country.Code 
+WHERE(
+	SELECT SUM(ci2.Population)
+FROM city ci2
+WHERE ci2.CountryCode = country.Code 
 ) < 10000;
-
-
 -- 2 Listar todas aquellas ciudades cuya población sea mayor que la población promedio entre todas las ciudades.
 
-SELECT
-	ci.Name
-FROM
-	city ci
-WHERE
-	(
-	SELECT
-		AVG(cit.Population)
-	FROM
-		city cit) < ci.Population ;
-	
+SELECT ci.Name
+FROM city ci
+WHERE(
+	SELECT AVG(cit.Population)
+FROM city cit) < ci.Population ;
 -- 3 Listar todas aquellas ciudades no asiáticas cuya población sea igual o mayor a la población total de algún país de Asia.
 
-SELECT 
-	ci.Name,
-	count(*) over()
-FROM 
-	(
-	SELECT
-		cf.*
-	FROM
-		city cf
-	INNER JOIN country c ON
+SELECT ci.Name, count(*) OVER()
+FROM(
+	SELECT cf.*
+FROM city cf
+INNER JOIN country c ON
 		cf.CountryCode = c.Code
-	WHERE
-		c.Continent != "Asia"
-	) as ci
-WHERE 
-	ci.Population >= SOME(
-	SELECT
-		co.Population
-	FROM
-		country co
-	WHERE
-		co.Continent LIKE "Asia")
-	
+WHERE c.Continent != "Asia"
+	) AS ci
+WHERE ci.Population >= SOME(
+	SELECT co.Population
+FROM country co
+WHERE co.Continent LIKE "Asia")
 -- 4 Listar aquellos países junto a sus idiomas no oficiales, que superen en porcentaje de hablantes a cada uno de los idiomas oficiales del país.
 	
-SELECT
-	co.Name,
-	c_not_offitial.`Language`,
-	count(*) over()
-FROM
-	country co
+SELECT co.Name, c_not_offitial.`Language`, count(*) OVER()
+FROM country co
 INNER JOIN countrylanguage c_not_offitial ON
 	co.Code = c_not_offitial.CountryCode
-WHERE
-	c_not_offitial.IsOfficial LIKE "F"
-	AND 
+WHERE c_not_offitial.IsOfficial LIKE "F"
+AND 
 	c_not_offitial.Percentage > ALL
 	(
-	SELECT
-		c_offitial.Percentage
-	FROM
-		countrylanguage c_offitial
-	WHERE
-		c_offitial.CountryCode = co.Code
-		AND c_offitial.IsOfficial LIKE "T"
+	SELECT c_offitial.Percentage
+FROM countrylanguage c_offitial
+WHERE c_offitial.CountryCode = co.Code
+AND c_offitial.IsOfficial LIKE "T"
 	);
+-- 5 Listar (sin duplicados) aquellas regiones que tengan países con una superficie menor a 1000 km2 y exista (en el país) al menos una ciudad con más de 100000 habitantes. (Hint: Esto puede resolverse con o sin una subquery, intenten encontrar ambas respuestas).
 
-
--- Listar (sin duplicados) aquellas regiones que tengan países con una superficie menor a 1000 km2 y exista (en el país) al menos una ciudad con más de 100000 habitantes. (Hint: Esto puede resolverse con o sin una subquery, intenten encontrar ambas respuestas).
-
-SELECT
-	DISTINCT 
-	co.region 
-FROM 
-	country co
-WHERE 
-	co.SurfaceArea < 1000
-	AND 100000 < SOME (
-	SELECT
-		ci.Population
-	FROM
-		city ci
-	WHERE
-		ci.CountryCode = co.Code
-	);
-
-SELECT 
+SELECT DISTINCT 
 	co.region
-FROM 
-	country co
+FROM country co
+WHERE co.SurfaceArea < 1000
+AND 100000 < SOME (
+	SELECT ci.Population
+FROM city ci
+WHERE ci.CountryCode = co.Code
+	);
+
+SELECT co.region
+FROM country co
 INNER JOIN
 	city ci ON 
-	ci.CountryCode = co.Code AND 
-	ci.Population > 100000 AND 
+	ci.CountryCode = co.Code
+AND 
+	ci.Population > 100000
+AND 
 	co.SurfaceArea < 1000
+-- 6 Listar el nombre de cada país con la cantidad de habitantes de su ciudad más poblada. (Hint: Hay dos maneras de llegar al mismo resultado. Usando consultas escalares o usando agrupaciones, encontrar ambas).
 
-	
--- Listar el nombre de cada país con la cantidad de habitantes de su ciudad más poblada. (Hint: Hay dos maneras de llegar al mismo resultado. Usando consultas escalares o usando agrupaciones, encontrar ambas).
+SELECT co.Name, max(ci.Population), count(*) OVER()
+FROM country co
+LEFT JOIN city ci ON
+	co.Code = ci.CountryCode
+GROUP BY
+	co.Code;
+-- 7 Listar aquellos países y sus lenguajes no oficiales cuyo porcentaje de hablantes sea mayor al promedio de hablantes de los lenguajes oficiales.
 
+SELECT co.Name, cl.`Language`
+FROM country co
+RIGHT JOIN countrylanguage cl ON
+	co.Code = cl.CountryCode
+WHERE cl.IsOfficial LIKE "F"
+AND
+	cl.Percentage > (
+	SELECT avg(c.Percentage)
+FROM countrylanguage c
+WHERE c.CountryCode = co.Code
+AND c.IsOfficial LIKE "T");
+-- 8 Listar la cantidad de habitantes por continente ordenado en forma descendente.
+
+SELECT continent, SUM(Population) AS pop
+FROM country
+GROUP BY
+	Continent
+ORDER BY
+	pop DESC;
+-- 9 Listar el promedio de esperanza de vida (LifeExpectancy) por continente con una esperanza de vida entre 40 y 70 años.
+SELECT continent, avg(LifeExpectancy) AS AVGLE
+FROM country
+GROUP BY
+	Continent
+HAVING
+	AVGLE > 40
+AND AVGLE < 70
+ORDER BY
+	AVGLE DESC;
+-- 10 Listar la cantidad máxima, mínima, promedio y suma de habitantes por continente.
+
+SELECT continent, SUM(Population) AS sum_population, max(Population) AS max_population, min(Population) AS min_population, avg(Population) AS avg_population
+FROM country
+GROUP BY
+	Continent
+ORDER BY
+	max_population DESC;
 
