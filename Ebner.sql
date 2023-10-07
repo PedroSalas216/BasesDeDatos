@@ -32,7 +32,7 @@ WHERE c.customer_id IN (
 		ORDER BY `total` DESC 
 		LIMIT 10
 	) top10
-);
+); 
 
 -- 5. Listar, ordenados por cantidad de películas (de mayor a menor), los distintos ratings de las películas existentes (Hint: rating se refiere en este caso a la clasificación según edad: G, PG, R, etc). 
 SELECT f.rating, COUNT(DISTINCT f.film_id)
